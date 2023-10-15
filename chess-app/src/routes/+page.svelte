@@ -1,13 +1,16 @@
 <script lang="ts">
+	import type { Square } from '$lib/domain/board/square.model';
 	import type { Coordinate } from '$lib/domain/coordinates/coordinate.model';
 	import { GameState } from '$lib/domain/Game-state.enum';
 	import { Game } from '$lib/domain/game.model';
+	import { Movement } from '$lib/domain/movements/movement.model';
 	import { Player } from '$lib/domain/players/player.model';
 	import { GameColor } from '$lib/GameColor.enum';
 	import { visualise } from '$lib/utils/pieceTypeMapper';
 
 	let game: Game;
 	let players: Player[];
+	let selectedField: Coordinate | null;
 
 	const initialize = () => {
 		players = [new Player(GameColor.White), new Player(GameColor.Black)];
@@ -17,11 +20,26 @@
 		game = game;
 	};
 
-	const isHighlight = () => {
-		// class:selected={isHighlight()}
+	const isHighlight = (square: Square) => {
+		if (selectedField == null) return false;
+
+		const selectedPiece = game.board.getPiece(selectedField);
+		if (selectedPiece == null) return false;
+
+		return false;
+
+		// 	const isInitialMove =
+		// 		selectedPiece.initialPosition.difference(selectedField) == new Movement(0, 0);
+
+		// 	const possibleMovements = [];
+		// 	if (isInitialMove) {
+		// 		possibleMovements.push(selectedPiece.getMovements().startMoves);
+		// 	}
+
+		// 	possibleMovements.push(selectedPiece.getMovements().baseMoves);
+		// 	possibleMovements.push(selectedPiece.getMovements().captureMoves);
 	};
 
-	let selectedField: Coordinate | null;
 	const selectPiece = (coordinate: Coordinate) => {
 		if (selectedField != null) {
 			move(selectedField!, coordinate);
@@ -50,6 +68,7 @@
 							<div
 								on:click={() => selectPiece(row.coordinate)}
 								class="w-12 h-12 p-3 flex justify-center items-center bg-slate-400"
+								class:highlight={isHighlight}
 							>
 								<!-- {row.coordinate.toString()} -->
 								{@html visualise(row.value, row.value?.color)}
