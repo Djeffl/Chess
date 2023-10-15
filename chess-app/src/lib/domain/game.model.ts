@@ -1,40 +1,99 @@
-import { ChessBoard } from '$lib/chessBoard.model';
-import type { Coordinate } from '$lib/domain/coordinate.model';
+import { Chessboard } from '$lib/domain/board/chessboard.model';
+import type { Coordinate } from '$lib/domain/coordinates/coordinate.model';
+import { JumpMovement } from '$lib/domain/movements/jump-movement.model';
+import type { WalkMovement } from '$lib/domain/movements/walk-movement.model';
+import type { Piece } from '$lib/domain/pieces/piece.model';
 import type { Player } from '$lib/domain/players/player.model';
 
 export class Game {
 	public players: Player[];
-	public board!: ChessBoard;
+	public board!: Chessboard;
 
-	public activePlayer!: Player;
+	public currentTurn!: Player;
 
 	constructor(players: Player[]) {
 		this.players = players;
 	}
 
 	public start(player: Player): void {
-		this.activePlayer = player;
-		this.board = new ChessBoard();
+		this.currentTurn = player;
+		this.board = new Chessboard();
 	}
 
-	public move(from: Coordinate, to: Coordinate): void {
-		this.swapPiece(from, to);
-		this.swapActiveUser();
+	public takeTurn(from: Coordinate, to: Coordinate) {
+		const isMoved = this.movePiece(from, to);
+		if (!isMoved) return;
+		this.swapUserTurn();
 	}
 
-	private swapPiece(from: Coordinate, to: Coordinate): void {
-		const fromSquare = this.board.field
-			.find((x) => x[0].field.row == from.row)
-			.find((x) => x.field.column == from.column && x.field.row == from.row);
-		const toSquare = this.board.field
-			.find((x) => x[0].field.row == to.row)
-			.find((x) => x.field.column == to.column && x.field.row == to.row);
+	private movePiece(from: Coordinate, to: Coordinate): boolean {
+		const fromPiece = this.board.getPiece(from);
 
-		toSquare!.value = fromSquare!.value;
-		fromSquare!.value = null;
+		if (fromPiece === null) return false;
+		if (!this.validatePieceMovement(fromPiece, from, to)) {
+			return false;
+		}
+
+		this.board.setPiece(to, fromPiece);
+		this.board.setPiece(from, null);
+		return true;
 	}
 
-	private swapActiveUser(): void {
-		this.activePlayer = this.activePlayer == this.players[0] ? this.players[1] : this.players[0];
+	private validatePieceMovement(piece: Piece, from: Coordinate, to: Coordinate): boolean {
+		const movement = from.difference(to);
+
+		const toPiece = this.board.getPiece(to);
+
+		const isPieceFromCurrentTurnUser = piece.color == this.currentTurn.color;
+
+		if (!isPieceFromCurrentTurnUser) return false;
+
+		const isCaptureMove = toPiece != null && piece.color != toPiece.color;
+		const isGoingToSelfPiece = toPiece != null && piece.color == toPiece.color;
+		const isStartMove =
+			piece.initialPosition.column == from.column && piece.initialPosition.row == from.row;
+
+		if (isGoingToSelfPiece) return false;
+
+		const pieceMovement = isCaptureMove
+			? // todo: Extract isValid movement to Piece
+			  piece
+					.getMovements()
+					.captureMoves.find((x) => x.column == movement.column && x.row == movement.row)
+			: isStartMove
+			? piece
+					.getMovements()
+					.startMoves.find((x) => x.column == movement.column && x.row == movement.row)
+			: piece
+					.getMovements()
+					.baseMoves.find((x) => x.column == movement.column && x.row == movement.row);
+
+		if (pieceMovement == null) return false;
+
+		if (pieceMovement instanceof JumpMovement) return true;
+
+		// Is Walk movement
+		// Validate if obstructed
+		if (this.validateWalkMovement(from, to, pieceMovement as WalkMovement)) return true;
+
+		return false;
+	}
+
+	private swapUserTurn(): void {
+		this.currentTurn = this.currentTurn == this.players[0] ? this.players[1] : this.players[0];
+	}
+
+	private validateWalkMovement(from: Coordinate, to: Coordinate, movement: WalkMovement): boolean {
+		// refactor that movement contains from & to coordinate
+		const squaresOnPath = this.board.getSquaresBetween(from, to, movement);
+		const obstructionPieces = squaresOnPath.filter((x) => x.value != null);
+		const isAnyObstructionFound = obstructionPieces.length != 0;
+
+		if (isAnyObstructionFound) {
+			console.log(JSON.stringify(obstructionPieces.map((x) => x.coordinate)));
+			return false;
+		}
+
+		return true;
 	}
 }

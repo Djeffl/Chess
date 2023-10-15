@@ -1,9 +1,9 @@
-import type { PlayerColor } from '$lib/playerColor.enum';
+import type { GameColor } from '$lib/GameColor.enum';
 
 export class Player {
-	public color: PlayerColor;
+	public color: GameColor;
 
-	constructor(color: PlayerColor) {
+	constructor(color: GameColor) {
 		this.color = color;
 	}
 }

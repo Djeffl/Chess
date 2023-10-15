@@ -1,32 +1,16 @@
+import type { Movement } from '$lib/domain/movements/movement.model';
+import { WalkMovement } from '$lib/domain/movements/walk-movement.model';
 import { Piece } from '$lib/domain/pieces/piece.model';
 
 export class Pawn extends Piece {
-	baseMoves = [
-		{
-			row: 1,
-			column: 0
-		}
-	];
-
-	startMoves = [
-		{
-			row: 1,
-			column: 0
-		},
-		{
-			row: 2,
-			column: 0
-		}
-	];
-
-	captureMoves = [
-		{
-			row: 1,
-			column: -1
-		},
-		{
-			row: 1,
-			column: 1
-		}
-	];
+	public baseMoves: Movement[] =
+		this.initialPosition.row == 2 ? [new WalkMovement(0, 1)] : [new WalkMovement(0, -1)];
+	public startMoves: Movement[] =
+		this.initialPosition.row == 2
+			? [new WalkMovement(0, 1), new WalkMovement(0, 2)]
+			: [new WalkMovement(0, -1), new WalkMovement(0, -2)];
+	public captureMoves: Movement[] =
+		this.initialPosition.row == 2
+			? [new WalkMovement(-1, 1), new WalkMovement(1, 1)]
+			: [new WalkMovement(1, -1), new WalkMovement(-1, -1)];
 }
