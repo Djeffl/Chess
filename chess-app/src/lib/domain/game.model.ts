@@ -1,7 +1,10 @@
+import { GameColor } from '$lib/GameColor.enum';
+import { GameState } from '$lib/domain/Game-state.enum';
 import { Chessboard } from '$lib/domain/board/chessboard.model';
 import type { Coordinate } from '$lib/domain/coordinates/coordinate.model';
 import { JumpMovement } from '$lib/domain/movements/jump-movement.model';
 import type { WalkMovement } from '$lib/domain/movements/walk-movement.model';
+import { King } from '$lib/domain/pieces';
 import type { Piece } from '$lib/domain/pieces/piece.model';
 import type { Player } from '$lib/domain/players/player.model';
 
@@ -10,6 +13,7 @@ export class Game {
 	public board!: Chessboard;
 
 	public currentTurn!: Player;
+	public state!: GameState;
 
 	constructor(players: Player[]) {
 		this.players = players;
@@ -18,11 +22,14 @@ export class Game {
 	public start(player: Player): void {
 		this.currentTurn = player;
 		this.board = new Chessboard();
+		this.state = GameState.Active;
 	}
 
 	public takeTurn(from: Coordinate, to: Coordinate) {
 		const isMoved = this.movePiece(from, to);
 		if (!isMoved) return;
+
+		this.ValidateIfPlayerIsWon();
 		this.swapUserTurn();
 	}
 
@@ -95,5 +102,17 @@ export class Game {
 		}
 
 		return true;
+	}
+
+	private ValidateIfPlayerIsWon() {
+		const kings = this.board.field.flatMap((x) => x.filter((y) => y.value instanceof King));
+
+		if (kings.length != 2) {
+			if (kings[0].value?.color == GameColor.Black) {
+				this.state = GameState.BlackWon;
+			} else {
+				this.state = GameState.WhiteWon;
+			}
+		}
 	}
 }
