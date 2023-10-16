@@ -1,24 +1,26 @@
-import { Movement } from '$lib/domain/movements/movement.model';
+import type { Column } from '$lib/domain/coordinates/column.model';
+import { AreaMovement } from '$lib/domain/movements/area-movement.model';
 
 export class Coordinate {
-	public column: string;
+	public column: Column;
 	public row: number;
-	constructor(column: string, row: number) {
+	constructor(column: Column, row: number) {
 		this.column = column;
 		this.row = row;
 	}
 
 	public toString(): string {
-		return `${this.column}${this.row}`;
+		return `${this.column.value}${this.row}`;
 	}
 
-	public difference(coordinate: Coordinate): Movement {
-		const colDiff = coordinate.getColumnIndex() - this.getColumnIndex();
-		const rowDiff = coordinate.row - this.row;
-		return new Movement(colDiff, rowDiff);
+	public equals(coordinate: Coordinate) {
+		return this.column.equals(coordinate.column) && this.row == coordinate.row;
 	}
 
-	public getColumnIndex(): number {
-		return this.column.charCodeAt(0) + 1 - 'A'.charCodeAt(0);
+	public prepareMove(coordinate: Coordinate): AreaMovement {
+		return new AreaMovement(
+			coordinate.column.number - this.column.number,
+			coordinate.row - this.row
+		);
 	}
 }

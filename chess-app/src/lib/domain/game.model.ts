@@ -37,6 +37,10 @@ export class Game {
 		const fromPiece = this.board.getPiece(from);
 
 		if (fromPiece === null) return false;
+		const isPieceFromCurrentTurnUser = fromPiece.color == this.currentTurn.color;
+
+		if (!isPieceFromCurrentTurnUser) return false;
+
 		if (!this.validatePieceMovement(fromPiece, from, to)) {
 			return false;
 		}
@@ -47,18 +51,14 @@ export class Game {
 	}
 
 	private validatePieceMovement(piece: Piece, from: Coordinate, to: Coordinate): boolean {
-		const movement = from.difference(to);
+		const movement = from.prepareMove(to);
 
 		const toPiece = this.board.getPiece(to);
-
-		const isPieceFromCurrentTurnUser = piece.color == this.currentTurn.color;
-
-		if (!isPieceFromCurrentTurnUser) return false;
 
 		const isCaptureMove = toPiece != null && piece.color != toPiece.color;
 		const isGoingToSelfPiece = toPiece != null && piece.color == toPiece.color;
 		const isStartMove =
-			piece.initialPosition.column == from.column && piece.initialPosition.row == from.row;
+			piece.initialPosition.column.equals(from.column) && piece.initialPosition.row == from.row;
 
 		if (isGoingToSelfPiece) return false;
 
