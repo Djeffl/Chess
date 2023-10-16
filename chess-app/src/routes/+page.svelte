@@ -12,6 +12,8 @@
 	let players: Player[];
 	let selectedField: Coordinate | null;
 
+	let possibleMovementSquares: Coordinate[];
+
 	const initialize = () => {
 		players = [new Player(GameColor.White), new Player(GameColor.Black)];
 		game = new Game(players);
@@ -26,18 +28,15 @@
 		const selectedPiece = game.board.getPiece(selectedField);
 		if (selectedPiece == null) return false;
 
-		return false;
-
-		// 	const isInitialMove =
-		// 		selectedPiece.initialPosition.difference(selectedField) == new Movement(0, 0);
-
-		// 	const possibleMovements = [];
-		// 	if (isInitialMove) {
-		// 		possibleMovements.push(selectedPiece.getMovements().startMoves);
-		// 	}
-
-		// 	possibleMovements.push(selectedPiece.getMovements().baseMoves);
-		// 	possibleMovements.push(selectedPiece.getMovements().captureMoves);
+		debugger;
+		if (
+			possibleMovementSquares.findIndex(
+				(x) => x.column.equals(square.coordinate.column) && x.row == square.coordinate.row
+			) != -1
+		) {
+			debugger;
+			return true;
+		}
 	};
 
 	const selectPiece = (coordinate: Coordinate) => {
@@ -47,7 +46,10 @@
 			return;
 		}
 
+		possibleMovementSquares = game.getPossibleSquaresToMove(coordinate);
+
 		selectedField = coordinate;
+		game = game;
 	};
 
 	initialize();
@@ -68,7 +70,7 @@
 							<div
 								on:click={() => selectPiece(row.coordinate)}
 								class="w-12 h-12 p-3 flex justify-center items-center bg-slate-400"
-								class:highlight={isHighlight}
+								class:isHighlight={isHighlight(row)}
 							>
 								<!-- {row.coordinate.toString()} -->
 								{@html visualise(row.value, row.value?.color)}
@@ -77,6 +79,7 @@
 							<div
 								on:click={() => selectPiece(row.coordinate)}
 								class="w-12 h-12 p-3 flex justify-center items-center bg-white"
+								class:isHighlight={isHighlight(row)}
 							>
 								<!-- {row.coordinate.toString()} -->
 								{@html visualise(row.value, row.value?.color)}

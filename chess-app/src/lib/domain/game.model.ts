@@ -33,6 +33,26 @@ export class Game {
 		this.swapUserTurn();
 	}
 
+	public getPossibleSquaresToMove(from: Coordinate): Array<Coordinate> {
+		const possibleMoves: Coordinate[] = [];
+
+		const fromPiece = this.board.getPiece(from);
+		if (fromPiece === null) return possibleMoves;
+
+		const isPieceFromCurrentTurnUser = fromPiece.color == this.currentTurn.color;
+		if (!isPieceFromCurrentTurnUser) return possibleMoves;
+
+		this.board.field.forEach((x) => {
+			x.forEach((y) => {
+				if (this.validatePieceMovement(fromPiece, from, y.coordinate)) {
+					possibleMoves.push(y.coordinate);
+				}
+			});
+		});
+
+		return possibleMoves;
+	}
+
 	private movePiece(from: Coordinate, to: Coordinate): boolean {
 		const fromPiece = this.board.getPiece(from);
 
